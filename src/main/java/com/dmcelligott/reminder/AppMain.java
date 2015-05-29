@@ -24,14 +24,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 public class AppMain {
 
-	private static final String LABEL_3_HOUR_INTERVAL = "Every 3 Hours";
-	private static final String LABEL_2_HOUR_INTERVAL = "Every 2 Hours";
-	private static final String LABEL_HOUR_INTERVAL = "Hourly";
-	//private static final int HOUR_MS = 1000 * 60 * 60;
-	private static final int MINUTE_MS = 1000 * 60;
-	private static final int HOUR_MS = MINUTE_MS * 60;
 	private static boolean notificationsEnabled = true;
-	private static long notificationPeriod = HOUR_MS;
+	private static long notificationPeriod = Constants.HOUR_MS;
 	private static Timer timer;
 	private static TimerTask reminderTask;
 	private static TrayIcon trayIcon;
@@ -86,7 +80,7 @@ public class AppMain {
 
 			popup.addSeparator();
 			popup.add(createIntervalMenu());
-			
+
 			popup.add(enabledCheckBox);
 
 			popup.addSeparator();
@@ -97,8 +91,10 @@ public class AppMain {
 
 			aboutItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					JOptionPane.showMessageDialog(null,
-							"This dialog box is run from System Tray");
+					JOptionPane
+							.showMessageDialog(
+									null,
+									"Saving you years of your life with a reminder to get up every once in a while\n\nDavid McElligott\ncontact: damc.dev@gmail.com");
 				}
 			});
 
@@ -115,7 +111,6 @@ public class AppMain {
 					int enabledStateChange = e.getStateChange();
 
 					if (enabledStateChange == ItemEvent.SELECTED) {
-						reminderTask.notify();
 						notificationsEnabled = true;
 						trayIcon.setImage(defaultTrayIcon);
 					} else {
@@ -134,51 +129,60 @@ public class AppMain {
 			timer = new Timer();
 			reminderTask = createNewReminderTask();
 			// schedule the task to run starting now and then every hour...
-			timer.schedule(reminderTask, 0l, HOUR_MS);
+			timer.schedule(reminderTask, 0l, Constants.HOUR_MS);
 		}
 
 	}
 
 	private static Menu createIntervalMenu() {
 		Menu intervalOptions = new Menu("Interval");
-		MenuItem hourIntervalItem = new MenuItem(LABEL_HOUR_INTERVAL);
-		MenuItem twoHourIntervalItem = new MenuItem(LABEL_2_HOUR_INTERVAL);
-		MenuItem threeHourIntervalItem = new MenuItem(LABEL_3_HOUR_INTERVAL);
-		
+		MenuItem hourIntervalItem = new MenuItem(Constants.LABEL_HOUR_INTERVAL);
+		MenuItem twoHourIntervalItem = new MenuItem(
+				Constants.LABEL_2_HOUR_INTERVAL);
+		MenuItem threeHourIntervalItem = new MenuItem(
+				Constants.LABEL_3_HOUR_INTERVAL);
+
 		intervalOptions.add(hourIntervalItem);
 		intervalOptions.add(twoHourIntervalItem);
 		intervalOptions.add(threeHourIntervalItem);
-		
-		ActionListener intervalListener = new ActionListener() {
-			
-			public void actionPerformed(ActionEvent e) {
-                MenuItem item = (MenuItem)e.getSource();
-                String selectedInterval = item.getLabel();
-                System.out.println(selectedInterval);
 
-                if(selectedInterval.equals(LABEL_HOUR_INTERVAL)) {
-                	notificationPeriod = HOUR_MS;
-                } else if (selectedInterval.equals(LABEL_2_HOUR_INTERVAL)) {
-                	notificationPeriod = HOUR_MS *2;
-                } else if (selectedInterval.equals(LABEL_3_HOUR_INTERVAL)) {
-                	notificationPeriod = HOUR_MS *3;
-                }
-                reminderTask.cancel();
-                reminderTask = createNewReminderTask();
-                timer.purge();
-    			timer.schedule(reminderTask, 0l, notificationPeriod);
+		MenuItem thirtySecondIntervalItem = new MenuItem(
+				Constants.LABEL_30_SECOND_INTERVAL);
+		intervalOptions.add(thirtySecondIntervalItem);
+
+		ActionListener intervalListener = new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				MenuItem item = (MenuItem) e.getSource();
+				String selectedInterval = item.getLabel();
+				System.out.println(selectedInterval);
+
+				if (selectedInterval.equals(Constants.LABEL_HOUR_INTERVAL)) {
+					notificationPeriod = Constants.HOUR_MS;
+				} else if (selectedInterval
+						.equals(Constants.LABEL_2_HOUR_INTERVAL)) {
+					notificationPeriod = Constants.HOUR_MS * 2;
+				} else if (selectedInterval
+						.equals(Constants.LABEL_3_HOUR_INTERVAL)) {
+					notificationPeriod = Constants.HOUR_MS * 3;
+				} else if (selectedInterval
+						.equals(Constants.LABEL_30_SECOND_INTERVAL)) {
+					notificationPeriod = Constants.MINUTE_MS / 2;
+				}
+				reminderTask.cancel();
+				reminderTask = createNewReminderTask();
+				timer.purge();
+				timer.schedule(reminderTask, 0l, notificationPeriod);
 
 			}
 
-
 		};
-		
+
 		hourIntervalItem.addActionListener(intervalListener);
 		twoHourIntervalItem.addActionListener(intervalListener);
 		threeHourIntervalItem.addActionListener(intervalListener);
+		thirtySecondIntervalItem.addActionListener(intervalListener);
 
-		
-		
 		return intervalOptions;
 	}
 
@@ -192,12 +196,12 @@ public class AppMain {
 			return (new ImageIcon(imageURL, description)).getImage();
 		}
 	}
-	
+
 	private static TimerTask createNewReminderTask() {
 		return new TimerTask() {
 			@Override
 			public void run() {
-				System.out.println(new Date() + " You should get up and take a break!");
+				System.out.println(new Date() + " [" + Thread.currentThread().toString() + "] You should get up and take a break!");
 				if (notificationsEnabled == true) {
 					trayIcon.displayMessage("Attention",
 							"You should get up and take a break!",
@@ -206,6 +210,4 @@ public class AppMain {
 			}
 		};
 	}
-	
-	
 }
